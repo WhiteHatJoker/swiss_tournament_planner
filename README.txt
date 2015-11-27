@@ -22,14 +22,11 @@ How to run the app.
 - Install Vagrant and VirtualBox
 - First, fork the fullstack-nanodegree-vm repository so that you have a version of your own within your Github account.
 - Next clone your fullstack-nanodegree-vm repo to your local machine.
-- Now, lets explore the starter code for this project provided within the VM: cd into /vagrant/tournament where you will see there are 3 files you have to work with on this project:
-	tournament.sql
-	tournament.py
-	tournament_test.py
-- To use the Vagrant virtual machine, navigate to the full-stack-nanodegree-vm/tournament directory in the terminal, then use the command vagrant up (powers on the virtual machine) followed by vagrant ssh (logs into the virtual machine). 
+- To use the Vagrant virtual machine, cd into the full-stack-nanodegree-vm/tournament directory in the terminal, then use the command vagrant up (powers on the virtual machine) followed by vagrant ssh (logs into the virtual machine). 
 - Remember, once you have executed the vagrant ssh command, you will want to cd /vagrant to change directory to the synced folders in order to work on your project, once your cd /vagrant, if you type ls on the command line, you'll see your tournament folder.
-The Vagrant VM provided in the fullstack repo already has PostgreSQL server installed, as well as the psql command line interface (CLI), so you'll need to have your VM on and be logged into it to run your database configuration file (tournament.sql), and test your Python file with tournament_test.py.
-- Type in tournament_test.py to see the results of the unit tests.
+- The Vagrant VM provided in the fullstack repo already has PostgreSQL server installed, as well as the psql command line interface (CLI), so you'll need to have your VM on and be logged into it to run your database configuration file (tournament.sql), and test your Python file with tournament_test.py.
+You can need to write psql in terminal to be able to work with the databases interactively in the command line. Next, we need to import the table definitions from tournament.sql by typing \i tournament.sql and then \q to exit psql command line interface.
+- Type in python tournament_test.py to see the results of the unit tests.
 
 Functions of tournament.py.
 ===================
@@ -38,26 +35,38 @@ Functions of tournament.py.
 
 Adds a player to the tournament by putting an entry in the database. The database should assign an ID number to the player. Different players may have the same names but will receive different ID numbers.
 
+
 - countPlayers()
 
 Returns the number of currently registered players. This function should not use the Python len() function; it should have the database count the players.
+
 
 - deletePlayers()
 
 Clear out all the player records from the database.
 
+
 - reportMatch(winner, loser)
 
 Stores the outcome of a single match between two players in the database.
+
 
 - deleteMatches()
 
 Clear out all the match records from the database.
 
+
+- oddPlayers()
+
+Gives a bye to one player if there are odd number of players
+
+
 - playerStandings()
 
 Returns a list of (id, name, wins, matches) for each player, sorted by the number of wins each player has.
 
+
 - swissPairings()
+Pairs up players with the relatively same number of points.
 
 Given the existing set of registered players and the matches they have played, generates and returns a list of pairings according to the Swiss system. Each pairing is a tuple (id1, name1, id2, name2), giving the ID and name of the paired players. For instance, if there are eight registered players, this function should return four pairings. This function should use playerStandings to find the ranking of players.

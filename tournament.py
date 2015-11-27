@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # tournament.py -- implementation of a Swiss-system tournament
 import psycopg2
+from random import randint
 
 
 def connect():
@@ -30,7 +31,7 @@ def countPlayers():
     """Returns the number of players currently registered."""
     DB = connect()
     c = DB.cursor()
-    c.execute("SELECT count(players.id) as num from players;")
+    c.execute("SELECT count(*) as num from sortedpl;")
     result = c.fetchone()
     DB.close()
     return result[0]
@@ -63,7 +64,7 @@ def playerStandings():
     """
     DB = connect()
     c = DB.cursor()
-    c.execute("SELECT id, name, wins, matches from players ORDER BY wins DESC;")
+    c.execute("SELECT * FROM sortedpl")
     results = c.fetchall()
     DB.close()
     return results
@@ -84,6 +85,33 @@ def reportMatch(winner, loser):
     DB.commit()
     DB.close()
 
+def oddPlayer():
+    """Add-on for swissPairings function, which randomly gives a bye to one player if there are odd number of players. In addition,
+    it makes sure to give player a bye only once.
+    """
+    count = countPlayers()
+    randnum = randint(1, count)
+    byeplayers = []
+    oddpairs = []
+    DB = connect()
+    c = DB.cursor()
+    c.execute("SELECT id FROM sortedpl WHERE rn=%s LIMIT 1", (randnum,))
+    result=c.fetchone()[0]
+    if result not in byeplayers:
+        byeplayers.append(result)
+        byeplayer=result
+        c.execute("UPDATE players SET matches=matches+1, wins= wins+1 WHERE players.id=%s", (byeplayer,))
+        DB.commit()
+        for i in range(0, count-1, 2):
+            c.execute("SELECT id, name FROM (SELECT id, name, ROW_NUMBER() OVER (ORDER BY wins DESC) as rn FROM (SELECT * FROM players WHERE NOT (id=ANY(%s))) as newlist ORDER BY wins DESC) as newsortlist WHERE rn>%s LIMIT 2", (byeplayers, i,))
+            players = c.fetchall()
+            oddpairs.append((players[0][0], players[0][1], players[1][0], players[1][1]))
+        DB.close()
+        return oddpairs
+    else:
+        oddPlayer() 
+    
+
 
 def swissPairings():
     """Returns a list of pairs of players for the next round of a match.
@@ -99,12 +127,18 @@ def swissPairings():
         name2: the second player's name
     """
     count = countPlayers()
-    DB = connect()
-    c = DB.cursor()
     pairs = []
-    for i in range(0, count, 2):
-        c.execute("SELECT id, name FROM sortedpl WHERE rn>%s LIMIT 2", (i,))
-        players = c.fetchall()
-        pairs.append((players[0][0], players[0][1], players[1][0], players[1][1]))
-    DB.close()
-    return pairs
+    if count%2==0:
+        DB = connect()
+        c = DB.cursor()
+        for i in range(0, count, 2):
+            c.execute("SELECT id, name FROM rankedpl WHERE rn>%s LIMIT 2", (i,))
+            players = c.fetchall()
+            pairs.append((players[0][0], players[0][1], players[1][0], players[1][1]))
+        DB.close()
+        return pairs
+    else:
+        oddPlayer()  
+    
+
+       
